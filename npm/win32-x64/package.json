@@ -1,0 +1,10 @@
+{
+  "name": "@skills-scanner/win32-x64",
+  "version": "0.1.0",
+  "description": "skills-scanner Windows x64 binary",
+  "os": ["win32"],
+  "cpu": ["x64"],
+  "main": "bin/skills-scanner.exe",
+  "files": ["bin"],
+  "license": "MIT"
+}

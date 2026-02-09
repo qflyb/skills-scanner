@@ -1,0 +1,16 @@
+[package]
+name = "skills-scanner"
+version = "0.1.0"
+edition = "2021"
+description = "扫描并管理本地 AI 工具的 skills"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+dialoguer = "0.11"
+console = "0.15"
+walkdir = "2"
+dirs = "5"
+
+[[bin]]
+name = "skills-scanner"
+path = "src/main.rs"

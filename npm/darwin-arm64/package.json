@@ -1,0 +1,10 @@
+{
+  "name": "@skills-scanner/darwin-arm64",
+  "version": "0.1.0",
+  "description": "skills-scanner macOS ARM64 binary",
+  "os": ["darwin"],
+  "cpu": ["arm64"],
+  "main": "bin/skills-scanner",
+  "files": ["bin"],
+  "license": "MIT"
+}
