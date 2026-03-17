@@ -17,6 +17,10 @@ struct SkillGroup {
     indices: Vec<usize>,
 }
 
+const MAX_DESCRIPTION_CHAR_COUNT: usize = 40;
+const TRUNCATED_DESCRIPTION_CHAR_COUNT: usize = 37;
+const DESCRIPTION_ELLIPSIS: &str = "...";
+
 /// 确保光标恢复显示的 RAII guard
 struct CursorGuard<'a>(&'a Term);
 
@@ -60,6 +64,30 @@ fn group_skills(skills: &[Skill], indices: &[usize]) -> Vec<SkillGroup> {
         .collect()
 }
 
+fn truncate_description(description: &str) -> String {
+    debug_assert!(TRUNCATED_DESCRIPTION_CHAR_COUNT < MAX_DESCRIPTION_CHAR_COUNT);
+
+    let mut truncated_end_index = description.len();
+    let mut character_count = 0;
+
+    for (byte_index, _) in description.char_indices() {
+        if character_count == TRUNCATED_DESCRIPTION_CHAR_COUNT {
+            truncated_end_index = byte_index;
+        }
+        character_count += 1;
+
+        if character_count > MAX_DESCRIPTION_CHAR_COUNT {
+            return format!(
+                "{}{}",
+                &description[..truncated_end_index],
+                DESCRIPTION_ELLIPSIS
+            );
+        }
+    }
+
+    description.to_string()
+}
+
 /// 交互式选择并删除 skills（完整流程）
 /// 返回 Ok(true) 表示有 skills 被删除，需要重新扫描
 pub fn interactive_select_and_delete(skills: &[Skill], indices: &[usize]) -> Result<bool> {
@@ -82,11 +110,7 @@ pub fn interactive_select_and_delete(skills: &[Skill], indices: &[usize]) -> Res
             if tools.len() == 1 {
                 let skill = &skills[g.indices[0]];
                 let desc = skill.display_description();
-                let truncated_desc = if desc.len() > 40 {
-                    format!("{}...", &desc[..37])
-                } else {
-                    desc.to_string()
-                };
+                let truncated_desc = truncate_description(desc);
                 format!(
                     "{:<12} > {:<20} {}",
                     tools[0],
@@ -164,11 +188,7 @@ pub fn interactive_select_and_delete(skills: &[Skill], indices: &[usize]) -> Res
             for &idx in &group.indices {
                 let skill = &skills[idx];
                 let desc = skill.display_description();
-                let truncated_desc = if desc.len() > 40 {
-                    format!("{}...", &desc[..37])
-                } else {
-                    desc.to_string()
-                };
+                let truncated_desc = truncate_description(desc);
                 sub_items.push(format!(
                     "{:<12} > {:<20} {}",
                     skill.tool,
@@ -502,4 +522,29 @@ pub fn show_scanning_message(path_count: usize) {
 /// 显示完成信息
 fn show_complete_message() {
     println!("\n{} 操作完成!\n", style("✨").green());
+}
+
+#[cfg(test)]
+mod tests {
+    use super::truncate_description;
+
+    #[test]
+    fn truncate_description_keeps_multibyte_characters_intact() {
+        let description = "简化臃肿的 DOM 结构，移除不必要的嵌套层级和冗余样式";
+
+        assert_eq!(
+            truncate_description(description),
+            "简化臃肿的 DOM 结构，移除不必要的嵌套层级和冗余样式"
+        );
+    }
+
+    #[test]
+    fn truncate_description_appends_ellipsis_after_character_limit() {
+        let description = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNO";
+
+        assert_eq!(
+            truncate_description(description),
+            "abcdefghijklmnopqrstuvwxyzABCDEFGHIJK..."
+        );
+    }
 }
